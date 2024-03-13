@@ -1,0 +1,7 @@
+# Camera
+FPS = 30
+FRAME_HEIGHT = 330
+FRAME_WIDTH = 380
+
+# General
+GESTURE_FRAME_GAP = 30

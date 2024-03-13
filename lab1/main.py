@@ -1,11 +1,13 @@
 import cv2
 import numpy as np
 
+from const import *
 from number import get_number
 from gesture import get_gesture
 from finger import get_finger
 
 IS_DISPLAY_SLIDER = False
+
 
 
 def nothing(x):
@@ -30,11 +32,11 @@ def show_rgb_image(b, g, r):
 
 def main():
 	cap = cv2_initialize()
+	print(cap.get(cv2.CAP_PROP_FPS))
 	while(True):
 		ret, frame = cap.read()
-		frame = frame[80:450, 150:550]
+		frame = frame[100:100+FRAME_HEIGHT, 150:150+FRAME_WIDTH]
 		# cv2.imshow("raw", frame)
-		
 		b_origin, g_origin, r_origin = cv2.split(frame)
 
 		if IS_DISPLAY_SLIDER:
@@ -44,14 +46,12 @@ def main():
 		else:
 			b_threshold = 220
 			g_threshold = 180
-			r_threshold = 245
+			r_threshold = 220
 		_, b = cv2.threshold(b_origin, b_threshold, 255, cv2.THRESH_BINARY)
 		_, g = cv2.threshold(g_origin, g_threshold, 255, cv2.THRESH_BINARY)
 		_, r = cv2.threshold(r_origin, r_threshold, 255, cv2.THRESH_BINARY)
 		# show_rgb_image(b, g, r)
 
-		# _, b_inv = cv2.threshold(b_origin, b_threshold, 255, cv2.THRESH_BINARY_INV)
-		# result = cv2.bitwise_and(r, b_inv)
 		result = r
 		display = cv2.cvtColor(result, cv2.COLOR_RGB2BGR)
 
@@ -62,11 +62,11 @@ def main():
 		coords = []
 		for cnt in contours:
 			area = cv2.contourArea(cnt)
+			if area < 100:
+				continue
 			(x, y), radius = cv2.minEnclosingCircle(cnt)
-			if radius > 10:
-				display = cv2.circle(display, (int(x), int(y)), int(radius), (0, 255, 0), 2)
-				coords.append((x, y))
-			
+			display = cv2.circle(display, (int(x), int(y)), int(radius), (0, 255, 0), 2)
+			coords.append((x, y))
 		print(coords)
 
 
