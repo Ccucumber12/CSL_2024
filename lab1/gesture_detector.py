@@ -74,6 +74,8 @@ def angle_between(v1, v2):
 			>>> angle_between((1, 0, 0), (-1, 0, 0))
 			3.141592653589793
 	"""
+	if np.isnan(v1).any() or np.isnan(v2).any():
+		return np.nan
 	v1_u = unit_vector(v1)
 	v2_u = unit_vector(v2)
 	return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
@@ -82,9 +84,20 @@ def distance_between(v1, v2):
 	return np.linalg.norm(v1 - v2)
 
 def comb(a, b):
-	if np.isnan(a):
+	if np.isnan(a).any():
 		return b
 	return a * FADE_COEF + b * (1 - FADE_COEF)
+
+def get_norm(a):
+	if np.isnan(a).any():
+		return np.nan
+	return np.linalg.norm(a)
+
+def two_fingers_go_to_opposite_direction(f1, f2):
+	assert(len(f1) == 2 and len(f2) == 2)
+	f1 = [np.array(x.pos) for x in f1]
+	f2 = [np.array(x.pos) for x in f2]
+	return np.inner(f1[0] - f2[0], f1[1] - f2[1]) < 0
 
 class GestureDetector(AbstractDetector):
 	def __init__(self):
@@ -92,8 +105,9 @@ class GestureDetector(AbstractDetector):
 		self.cnt = 0
 
 		self.last_tap_gap = DOUBLE_TAP_GAP
-		self.last_vector = -1
-		self.last_pos = -1
+		self.last_vector = np.nan
+		self.last_pos = np.nan
+		self.last_frame = []
 		self.cnt_touch = 0
 		self.cnt_no_touch = 0
 		self.ret = Gesture.NO_ACTION
@@ -105,10 +119,11 @@ class GestureDetector(AbstractDetector):
 		return "Gesture Detector"
 	
 	def _fire_tap(self):
+		print("Fire a tap: lastone:", self.last_tap_gap)
 		if self.last_tap_gap <= DOUBLE_TAP_GAP:
-			self.res = Gesture.DOUBLE_TAP
+			self.ret = Gesture.DOUBLE_TAP
 		else:
-			self.res = Gesture.TAP
+			self.ret = Gesture.TAP
 
 		self.last_tap_gap = 0
 
@@ -121,17 +136,18 @@ class GestureDetector(AbstractDetector):
 		self.display()
 	
 	def detect(self, fingers: List[Finger]) -> Gesture:
+		# assuming same finger goes to the same index
 		self.cnt += 1
 
-
-
 		self.last_tap_gap += 1
-		self.res = Gesture.NO_ACTION
+		self.ret = Gesture.NO_ACTION
+
+		if len(self.last_frame) != len(fingers):
+			self.avg_move_delta = np.nan
 
 		if len(fingers) == 0:
-			self.last_pos = -1
-			self.last_vector = -1
-			self.last_pos = -1
+			self.last_pos = np.nan
+			self.last_vector = np.nan
 
 			if 0 < self.cnt_touch <= TAP_LAST_FRAME:
 				self._fire_tap()
@@ -147,58 +163,60 @@ class GestureDetector(AbstractDetector):
 			self.cnt_touch += 1
 			self.cnt_no_touch = 0
 
-			cur_pos = np.array(fingers[0].pos)
-			cur_vector = np.array(fingers[0].pos) - np.array(fingers[-1].pos)
+			cur_pos = (np.array(fingers[0].pos) + np.array(fingers[-1].pos)) / 2
+			cur_vector = np.array(fingers[0].pos) - np.array(fingers[-1].pos) if len(fingers) > 1 else np.nan
 
-			if isinstance(self.last_pos, int):
+			if np.isnan(self.last_pos).any():
 				self.last_pos = cur_pos
-			if isinstance(self.last_vector, int):
-				self.last_vector = cur_vector
+			
+			cur_wid = get_norm(cur_vector)
+			last_wid = get_norm(self.last_vector)
 
-			cur_wid = np.linalg.norm(cur_vector)
-			last_wid = np.linalg.norm(self.last_vector)
+			if len(fingers) == len(self.last_frame):
+				self.avg_move_delta = comb(self.avg_move_delta, distance_between(cur_pos, self.last_pos))
 
 			if len(fingers) == 1:
-				if distance_between(cur_pos, self.last_pos) > MOVEMENT_DELTA_THRESHOLD:
+				if self.avg_move_delta > MOVEMENT_DELTA_THRESHOLD and self.cnt_touch >= SWIPE_FRAME_THRESHOLD:
 					self.ret = Gesture.SWIPE
 				elif self.cnt_touch >= LONG_PRESS_THRESHOLD:
 					self.ret = Gesture.LONG_PRESS
 
-			self.avg_angle = comb(self.avg_angle, angle_between(cur_vector, self.last_vector))
-
-			self.avg_move_delta = comb(self.avg_move_delta, distance_between(cur_pos, self.last_pos))
-
 			if len(fingers) == 2:
+				if isinstance(self.last_vector, int):
+					self.avg_angle = comb(self.avg_angle, 0)
+				else:
+					self.avg_angle = comb(self.avg_angle, angle_between(cur_vector, self.last_vector))
+
 				self.avg_zoom_delta = comb(self.avg_zoom_delta, cur_wid - last_wid)
 				self.cnt_touch = -1
 
-				print(f"Time: {self.cnt}\n" +
-					  f"avg angle: {self.avg_angle}\n" +
-					  f"avg zoom dis: {self.avg_zoom_delta}\n" +
-					  f"avg move dis: {self.avg_move_delta}\n" + 
-						"-----------------------------")
 #				print(f"angle: {angle_between(cur_vector, self.last_vector)}\n" +
 #					  f"zoom dis: {cur_wid - last_wid}\n" +
 #					  f"move dis: {distance_between(cur_pos, self.last_pos)}\n" + 
-#						"-----------------------------")
-				if self.avg_angle > ROTATE_DELTA_THRESHOLD:
-					self.ret = Gesture.ROTATE
-				elif self.avg_zoom_delta > ZOOM_DELTA_THRESHOLD:
-					self.ret = Gesture.ZOOM_OUT
-				elif -self.avg_zoom_delta > ZOOM_DELTA_THRESHOLD:
-					self.ret = Gesture.ZOOM_IN
-				elif self.avg_move_delta > MOVEMENT_DELTA_THRESHOLD:
-					self.ret = Gesture.SCROLL
-				self.last_vector = cur_vector
-#				if angle_between(cur_vector, self.last_vector) > ROTATE_DELTA_THRESHOLD:
-#					self.ret = Gesture.ROTATE
-#				elif cur_wid - last_wid > ZOOM_DELTA_THRESHOLD:
-#					self.ret = Gesture.ZOOM_OUT
-#				elif last_wid - cur_wid > ZOOM_DELTA_THRESHOLD:
-#					self.ret = Gesture.ZOOM_IN
-#				elif distance_between(cur_pos, self.last_pos) > MOVEMENT_DELTA_THRESHOLD:
-#					self.ret = Gesture.SCROLL
+#						"----------------------------------------------")
+
+				if len(self.last_frame) == 2:
+					if two_fingers_go_to_opposite_direction(self.last_frame, fingers):
+						# Only Zoom, rotate is possible
+						if self.avg_angle > ROTATE_DELTA_THRESHOLD:
+							self.ret = Gesture.ROTATE
+						elif self.avg_zoom_delta > ZOOM_DELTA_THRESHOLD:
+							self.ret = Gesture.ZOOM_OUT
+						elif -self.avg_zoom_delta > ZOOM_DELTA_THRESHOLD:
+							self.ret = Gesture.ZOOM_IN
+					elif self.avg_move_delta > MOVEMENT_DELTA_THRESHOLD:
+						self.ret = Gesture.SCROLL
+			else:
+				self.avg_angle = comb(self.avg_angle, 0)
+				self.avg_zoom_delta = comb(self.avg_zoom_delta, 0)
+
+			print(f"Time: {self.cnt}\n" +
+				  f"avg angle: {self.avg_angle}\n" +
+				  f"avg zoom dis: {self.avg_zoom_delta}\n" +
+				  f"avg move dis: {self.avg_move_delta}\n" + 
+					"-----------------------------")
+			self.last_vector = cur_vector
 			self.last_pos = cur_pos
-#		if 'ret' not in self.__dict__ or random.randint(0, 200) == 0:
-#			self.ret = random.choice(list(Gesture))
+		self.last_frame = fingers
+
 		return self.ret
