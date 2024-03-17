@@ -38,3 +38,4 @@ FADE_COEF = .5
 
 
 # Finger
+INF_DIST = 10000000
