@@ -76,12 +76,13 @@ class NumberDetector(AbstractDetector):
                 self.history.append(quadrant)
         for i in range(10):
             flag=True
-            for j in len(self.history):
+            for j in range(len(self.history)):
                 if self.history[j]!=self.shapes[i][j]:
                     flag=False
                     break
             if flag:
                 return i
+        return None
 
         if 'ret' not in self.__dict__ or random.randint(0, 200) == 0:
             self.ret = random.randint(0, 9)
