@@ -40,7 +40,7 @@ class AbstractDetector():
     def display(self):
         cv2.imshow(str(self), self.screen)
 
-    def draw_circles(self, fingers: Finger | list[Finger]):
+    def draw_circles(self, fingers: Finger | List[Finger]):
         if type(fingers) != list:
             fingers = [fingers]
         for finger in fingers:

@@ -150,12 +150,12 @@ class GestureDetector(AbstractDetector):
 		self.cnt += 1
 
 		self.last_tap_gap += 1
-		self.ret = Gesture.NO_ACTION
 
 		if len(self.last_frame) != len(fingers):
 			self.avg_move_delta = np.nan
 
 		if len(fingers) == 0:
+			self.ret = Gesture.NO_ACTION
 			self.last_pos = np.nan
 			self.last_vector = np.nan
 
@@ -186,22 +186,24 @@ class GestureDetector(AbstractDetector):
 				self.avg_move_delta = comb(self.avg_move_delta, distance_between(cur_pos, self.last_pos))
 
 			if len(fingers) == 1:
-				if self.avg_move_delta > MOVEMENT_DELTA_THRESHOLD and self.cnt_touch >= SWIPE_FRAME_THRESHOLD:
+				if self.ret == Gesture.SWIPE or (self.avg_move_delta > MOVEMENT_DELTA_THRESHOLD and self.cnt_touch >= SWIPE_FRAME_THRESHOLD):
 					self.ret = Gesture.SWIPE
 				elif self.cnt_touch >= LONG_PRESS_THRESHOLD:
 					self.ret = Gesture.LONG_PRESS
-
-			if len(fingers) == 2:
+				else:
+					self.ret = Gesture.NO_ACTION
+			elif len(fingers) == 2:
+				self.ret = Gesture.NO_ACTION
 				if isinstance(self.last_vector, int):
 					self.avg_angle = comb(self.avg_angle, 0)
 				else:
 					self.avg_angle = comb(self.avg_angle, angle_between(cur_vector, self.last_vector))
 
 				self.avg_zoom_delta = comb(self.avg_zoom_delta, cur_wid - last_wid)
-				self.cnt_touch = -1
+				self.cnt_touch = -10000000000
 
 #				print(f"angle: {angle_between(cur_vector, self.last_vector)}\n" +
-#					  f"zoom dis: {cur_wid - last_wid}\n" +
+#					  f"zoom dis: {cur_wid - last_wid}\n" 
 #					  f"move dis: {distance_between(cur_pos, self.last_pos)}\n" + 
 #						"----------------------------------------------")
 
@@ -211,9 +213,9 @@ class GestureDetector(AbstractDetector):
 						if self.avg_angle > ROTATE_DELTA_THRESHOLD:
 							self.ret = Gesture.ROTATE
 						elif self.avg_zoom_delta > ZOOM_DELTA_THRESHOLD:
-							self.ret = Gesture.ZOOM_OUT
-						elif -self.avg_zoom_delta > ZOOM_DELTA_THRESHOLD:
 							self.ret = Gesture.ZOOM_IN
+						elif -self.avg_zoom_delta > ZOOM_DELTA_THRESHOLD:
+							self.ret = Gesture.ZOOM_OUT
 					elif self.avg_move_delta > MOVEMENT_DELTA_THRESHOLD:
 						self.ret = Gesture.SCROLL
 			else:
@@ -227,6 +229,7 @@ class GestureDetector(AbstractDetector):
 					"-----------------------------")
 			self.last_vector = cur_vector
 			self.last_pos = cur_pos
+
 		self.last_frame = fingers
 
 		return self.ret

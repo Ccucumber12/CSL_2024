@@ -57,7 +57,7 @@ def main(args):
         else:
             b_threshold = 220
             g_threshold = 180
-            r_threshold = 160
+            r_threshold = 80
         _, b = cv2.threshold(b_origin, b_threshold, 255, cv2.THRESH_BINARY)
         _, g = cv2.threshold(g_origin, g_threshold, 255, cv2.THRESH_BINARY)
         _, r = cv2.threshold(r_origin, r_threshold, 255, cv2.THRESH_BINARY)

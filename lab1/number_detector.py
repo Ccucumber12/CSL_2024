@@ -7,19 +7,19 @@ class NumberDetector(AbstractDetector):
     def __init__(self):
         super().__init__()
 
-        self.RADIUS=FRAME_WIDTH/4
+        self.RADIUS=FRAME_WIDTH/5
         self.SLOPE=0.4
         self.cnt_reset=0
         self.history=[]
         self.shapes=[
                 [2,1,4,7,8,9,6,3,2],
                 [2,5,8],
-                [1,2,3,6,9,8,7,8,9],
+                [1,2,3,5,7,8,9],
                 [1,2,3,6,5,6,9,8,7],
                 [1,4,5,6,2,5,8],
                 [1,2,3,1,4,5,6,9,8,7],
                 [2,1,4,7,8,9,6,5,4],
-                [1,2,3,5,7],
+                [1,4,1,2,3,6,9],
                 [3,2,1,5,9,8,7,5,3],
                 [3,2,1,4,5,6,3,6,9]]
 
@@ -27,7 +27,6 @@ class NumberDetector(AbstractDetector):
         return "Number Detector"
 
     def run(self, fingers: List[Finger]):
-        fingers = self.filter_fingers(fingers)
         self.check_reset(fingers)
         self.draw_circles(fingers)
         prediction = self.detect(fingers)
@@ -77,6 +76,8 @@ class NumberDetector(AbstractDetector):
             quadrant=self.quadrant(fingers[0])
             if self.history==[] or self.history[-1]!=quadrant:
                 self.history.append(quadrant)
+        if self.history==[]:
+            return None
         for i in range(10):
             flag=True
             for j in range(len(self.history)):
