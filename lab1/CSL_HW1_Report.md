@@ -4,6 +4,8 @@ Team Name: 我沒有頭緒
 
 Team Members: B10902006 詹子慶、B10902067 黃允謙、B10902083 張程凱、B10902136 陳妍姍
 
+Demo Video Link: https://www.youtube.com/watch?v=bGaYpATnB6o
+
 ##### 1. Summarize what you have learned in this lab
 
 [Theory]
@@ -12,7 +14,7 @@ Team Members: B10902006 詹子慶、B10902067 黃允謙、B10902083 張程凱、
 
 [Hardware]
 
-* Understood the connection of basic circuits, including batteries, DuPont wires, resistors and LED lights and a camera
+* Understood the connection of basic circuits, including batteries, DuPont wires, resistors, LED lights, and a camera
 * Understood how to add DuPont connectors on wires
 * Understood how to use a heat gun to bend the arcylic sheet
 
@@ -20,9 +22,9 @@ Team Members: B10902006 詹子慶、B10902067 黃允謙、B10902083 張程凱、
 
 * Understood the basic usage of packages like OpenCV
 * number detection:
-  Understood how to attract features from handwritten digits and use a decision tree to classify them
+  Understood how to extract features from handwritten digits and use a decision tree to classify them
 * gesture detection:
-  Used geometrical properties to identify each gesture. For example, considering how the slope between two points changes over time, or considering the centroid of touch points to distinguish similar gestures. We also used timers to calculate how many frames we should expect between double taps.
+  Used geometrical properties to identify each gesture. For example, we consider how the slope between two points changes over time for rotation, and we also consider the centroid of touch points to distinguish between similar gestures. We also used timers to calculate how many frames we should expect between double taps.
 * finger detection:
   Understood how to use relative displacement between consecutive frames to identify the same finger ID.
 
@@ -55,10 +57,10 @@ In each iteration, `main.py` calls each of the three detectors and shows the pre
 ##### 2-2. How you can improve this device
 
 1. More accurate and robust digit recognition
-   To ensure that our device can recognize different handwriting styles and strokes for universal usage, we can use machine learning to train a more advanced classifier. However, the current implementation is low cost and can perform pretty well under regular scenarios already.
+   To ensure that our device can recognize different handwriting styles and strokes for universal usage, we can use machine learning to train a more advanced classifier. However, the current implementation is low-cost and can perform pretty well under regular scenarios already.
 2. Higher sensitivity
-   The sensitivity of the screen could still be improved to ensure smoother and more continuous frames without interruptions. We have tried using water or applying more pressure, but enhancing the camera's resolution or refining certain aspects of the algorithm might provide better results.
+   The sensitivity of the screen could still be improved to ensure smoother and more continuous frames without interruptions. We have tried using water or tapping / pressing harder, but enhancing the camera's resolution or refining certain aspects of the algorithm might provide better results.
 
 ##### 3. Some feedback for this lab
 
-* Thank you Professor and TAs! The ideas in class are clearly introduced and the instructions in TA sessions were also very helpful.
+* Thank you Professor and TAs! The ideas in class are clearly delivered and the instructions in TA sessions were also very helpful.
