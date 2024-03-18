@@ -34,6 +34,9 @@ class NumberDetector(AbstractDetector):
         self.draw_text(f"Prediction: {prediction}")
         self.display()
 
+    def filter_fingers(self,fingers):
+        return [max(fingers,key=lambda x:x.radius)]
+
     def quadrant(self,finger):
         x=finger.pos[0]-FRAME_WIDTH/2
         y=finger.pos[1]-FRAME_HEIGHT/2
@@ -69,7 +72,7 @@ class NumberDetector(AbstractDetector):
             if self.cnt_reset>=RESET_FRAME_THRESHOLD:
                 self.history=[]
         else:
-            assert(len(fingers)==1)
+            fingers=self.filter_fingers(fingers)
             self.cnt_reset=0
             quadrant=self.quadrant(fingers[0])
             if self.history==[] or self.history[-1]!=quadrant:
