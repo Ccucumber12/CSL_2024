@@ -115,6 +115,9 @@ class GestureDetector(AbstractDetector):
 		self.avg_zoom_delta = np.nan
 		self.avg_move_delta = np.nan
 
+		self.no_action_counter = 0
+		self.prediction = Gesture.NO_ACTION
+
 	def __str__(self):
 		return "Gesture Detector"
 	
@@ -132,7 +135,14 @@ class GestureDetector(AbstractDetector):
 		self.check_reset(fingers)
 		self.draw_circles(fingers)
 		prediction = self.detect(fingers)
-		self.draw_text(f"Gesture: {prediction.name}")
+		if prediction == Gesture.NO_ACTION:
+			self.no_action_counter += 1
+			if self.no_action_counter >= NO_ACTION_THRESHOLD:
+				self.prediction = Gesture.NO_ACTION
+		else:
+			self.prediction = prediction
+			self.no_action_counter = 0
+		self.draw_text(f"Gesture: {self.prediction.name}")
 		self.display()
 	
 	def detect(self, fingers: List[Finger]) -> Gesture:
