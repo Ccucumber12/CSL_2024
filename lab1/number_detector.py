@@ -80,7 +80,7 @@ class NumberDetector(AbstractDetector):
         for i in range(10):
             flag=True
             for j in range(len(self.history)):
-                if self.history[j]!=self.shapes[i][j]:
+                if len(self.history)>len(self.shapes[i]) or self.history[j]!=self.shapes[i][j]:
                     flag=False
                     break
             if flag:
