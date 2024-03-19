@@ -17,7 +17,7 @@ def main(args):
     is_display_slider = args.slider
     is_save_record = args.save
 
-    cap = cv2.VideoCapture(0) # change to your video device index
+    cap = cv2.VideoCapture(0) # change to your webcam device index
     if is_display_slider:
         cv2.namedWindow('Threshold Sliders')
         nothing = lambda x : x
@@ -31,7 +31,7 @@ def main(args):
 
     record = []
     if is_use_record:
-        with open(f'pickles/{args.record}.pkl', 'rb') as f:
+        with open(f'{args.record}', 'rb') as f:
             record = pickle.load(f)
         frame_counter = 0
 
@@ -55,9 +55,9 @@ def main(args):
             g_threshold = cv2.getTrackbarPos('G', 'Threshold Sliders')
             r_threshold = cv2.getTrackbarPos('R', 'Threshold Sliders')
         else:
-            b_threshold = 220
-            g_threshold = 180
-            r_threshold = 80
+            b_threshold = B_THRESHOLD
+            g_threshold = G_THRESHOLD
+            r_threshold = R_THRESHOLD
         _, b = cv2.threshold(b_origin, b_threshold, 255, cv2.THRESH_BINARY)
         _, g = cv2.threshold(g_origin, g_threshold, 255, cv2.THRESH_BINARY)
         _, r = cv2.threshold(r_origin, r_threshold, 255, cv2.THRESH_BINARY)
@@ -99,7 +99,7 @@ def main(args):
         start_time = time.time()
 
     if is_save_record:
-        with open(f'pickles/{args.save}.pkl', 'wb') as f:
+        with open(f'{args.save}', 'wb') as f:
             pickle.dump(record, f)
     cap.release()
     cv2.destroyAllWindows()

@@ -1,5 +1,4 @@
 from enum import Enum, auto
-import random
 
 from detector import *
 from const import *

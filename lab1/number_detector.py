@@ -87,7 +87,3 @@ class NumberDetector(AbstractDetector):
             if flag:
                 return i
         return None
-
-        if 'ret' not in self.__dict__ or random.randint(0, 200) == 0:
-            self.ret = random.randint(0, 9)
-        return self.ret
