@@ -28,6 +28,8 @@ public class PlayerControl : MonoBehaviour
     public float driftBoostTime;
     public float driftBoostSpeed;
     public float maxDriftBoostSpeed;
+    public AudioSource driftSFX;
+    public AudioSource boostSFX;
 
     [Header("VFX")]
     public ParticleSystem dropVFXGlobal;
@@ -240,6 +242,7 @@ public class PlayerControl : MonoBehaviour
         if (driftDirection != 0)
         {
             isDrifting = true;
+            driftSFX.Play();
             if (driftDirection == 1)
                 leftDriftVFXGlow.Play();
             else
@@ -256,11 +259,13 @@ public class PlayerControl : MonoBehaviour
         leftDriftVFXSpark.Stop();
         rightDriftVFXGlow.Stop();
         rightDriftVFXSpark.Stop();
+        driftSFX.Stop();
         
         if (driftCharge > driftBoostChargeTime)
         {
             remainingBoostTime = driftBoostTime;
             boostVFX.Play();
+            boostSFX.Play();
         }
 
         driftDirection = 0;

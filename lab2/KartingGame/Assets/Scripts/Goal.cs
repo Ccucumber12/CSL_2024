@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class Goal : MonoBehaviour
 {
-    public AudioClip sfx;
+    public AudioClip goalMusic;
+    public AudioSource goalSFX;
 
     public ParticleSystem[] confetti;
 
@@ -13,7 +14,7 @@ public class Goal : MonoBehaviour
         if (other.tag == "Player" && GameManager.Instance.GoalCheck())
         {
             AudioSource audioSoruce = other.GetComponentInParent<AudioSource>();
-            audioSoruce.clip = sfx;
+            audioSoruce.clip = goalMusic;
             audioSoruce.Play();
 
             GameManager.Instance.GoalPassed();
@@ -21,6 +22,7 @@ public class Goal : MonoBehaviour
             {
                 particleSystem.Play();
             }
+            goalSFX.Play();
         }
     }
 }
