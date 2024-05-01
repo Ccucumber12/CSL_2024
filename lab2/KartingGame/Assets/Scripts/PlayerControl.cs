@@ -1,9 +1,7 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
-using UnityEngine.UIElements;
 
 public class PlayerControl : MonoBehaviour
 {
@@ -13,6 +11,8 @@ public class PlayerControl : MonoBehaviour
     public float frontAcceleration;
     public float backAcceleration;
     public float drag;
+    public float maxSteerSpeed;
+    public float maxDriftSpeed;
 
     [Header("Steer")]
     public float maxRotateAngle;
@@ -21,17 +21,28 @@ public class PlayerControl : MonoBehaviour
     public float straightenSpeed;
     public Transform hands;
     public Transform frontLeftWheel;
-    public Transform frontRightWheel; 
+    public Transform frontRightWheel;
+
+    [Header("Drift")]
+    public float driftBoostChargeTime;
+    public float driftBoostTime;
+    public float driftBoostSpeed;
+    public float maxDriftBoostSpeed;
+
+    [Header("VFX")]
+    public ParticleSystem dropVFXGlobal;
+    public ParticleSystem dropVFXLocal;
+    public ParticleSystem leftDriftVFXGlow;
+    public ParticleSystem leftDriftVFXSpark;
+    public ParticleSystem rightDriftVFXGlow;
+    public ParticleSystem rightDriftVFXSpark;
+    public ParticleSystem boostVFX;
 
     [Header("Input Actions")]
     public InputAction accelerate;
     public InputAction steer;
     public InputAction drift;
     public InputAction restart;
-
-    [Header("Others")]
-    public ParticleSystem dropVFXGlobal;
-    public ParticleSystem dropVFXLocal;
 
     private Rigidbody rb;
     private float currentSpeed;
@@ -43,6 +54,8 @@ public class PlayerControl : MonoBehaviour
     private bool isDrifting = false;
     private int driftDirection;
     private float driftCharge = 0;
+    private bool isDriftSparking = false;
+    private float remainingBoostTime;
 
     private void Awake()
     {
@@ -67,6 +80,26 @@ public class PlayerControl : MonoBehaviour
             isDropping = true;
             StartCoroutine(DropAnimation());
         }
+        if (isDrifting)
+        {
+            driftCharge += Time.deltaTime;
+            if (!isDriftSparking && driftCharge > driftBoostChargeTime)
+            {
+                isDriftSparking = true;
+                if (driftDirection == 1)
+                    leftDriftVFXSpark.Play();
+                else
+                    rightDriftVFXSpark.Play();
+            }
+        }
+
+        if (remainingBoostTime > 0)
+        {
+            remainingBoostTime -= Time.deltaTime;
+            if (remainingBoostTime <= 0)
+                boostVFX.Stop();
+        }
+
     }
 
     private void FixedUpdate()
@@ -110,6 +143,23 @@ public class PlayerControl : MonoBehaviour
             currentSpeed = Mathf.Lerp(currentSpeed, -maxBackwardSpeed, Time.fixedDeltaTime * backAcceleration);
         else
             currentSpeed = Mathf.Lerp(currentSpeed, 0, Time.fixedDeltaTime * drag);
+
+        float speedLimit = maxForwardSpeed;
+
+        if (remainingBoostTime > 0)
+        {
+            currentSpeed += driftBoostSpeed;
+            speedLimit = maxDriftBoostSpeed;
+        }
+        else if (isDrifting)
+        {
+            speedLimit = maxDriftSpeed;
+        }
+        else if (ReadSteerValue() != 0)
+        {
+            speedLimit = maxSteerSpeed;
+        }
+        currentSpeed = Mathf.Min(currentSpeed, speedLimit);
 
         RotateRigidbody();
         Vector3 velocity = transform.forward * currentSpeed;
@@ -190,13 +240,33 @@ public class PlayerControl : MonoBehaviour
         if (driftDirection != 0)
         {
             isDrifting = true;
+            if (driftDirection == 1)
+                leftDriftVFXGlow.Play();
+            else
+                rightDriftVFXGlow.Play();
         }
     }
 
     private void EndDrift(InputAction.CallbackContext ctx)
     {
-        isDrifting = false;
+        if (isDrifting == false)
+            return;
+
+        leftDriftVFXGlow.Stop();
+        leftDriftVFXSpark.Stop();
+        rightDriftVFXGlow.Stop();
+        rightDriftVFXSpark.Stop();
+        
+        if (driftCharge > driftBoostChargeTime)
+        {
+            remainingBoostTime = driftBoostTime;
+            boostVFX.Play();
+        }
+
         driftDirection = 0;
+        driftCharge = 0;
+        isDriftSparking = false;
+        isDrifting = false;
     }
 
     public void UpdateRespawnInformation(Vector3 position, Vector3 rotation)

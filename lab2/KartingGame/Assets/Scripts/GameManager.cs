@@ -79,7 +79,6 @@ public class GameManager : MonoBehaviour
     public void CheckpointPassed()
     {
         checkpointCount++;
-        Debug.Log($"Checkpoint Count: {checkpointCount}");
     }
 
     public bool GoalCheck()
