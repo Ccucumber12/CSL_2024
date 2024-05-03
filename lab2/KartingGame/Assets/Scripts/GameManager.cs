@@ -1,8 +1,6 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -23,12 +21,9 @@ public class GameManager : MonoBehaviour
     public AudioSource countdownSFX;
     public AudioSource bgm;
     
-    private int checkpointCount = 0;
-    private bool isRacing = false;
+    private int checkpointCount;
+    private bool isRacing;
     private float startTime;
-
-    private Vector3 respawnPosition;
-    private Vector3 respawnRotation;
 
     private void Awake()
     {
@@ -54,13 +49,12 @@ public class GameManager : MonoBehaviour
             UpdateTimer();
         }
     }
-
     private IEnumerator StartCountdown()
     {
         yield return new WaitForSeconds(1);
         countdownSFX.Play();
         yield return new WaitForSeconds(3);
-        playerControl.EnableControls();
+        playerControl.EnableMovement();
         startTime = Time.time;
         isRacing = true;
         bgm.Play();
@@ -89,12 +83,7 @@ public class GameManager : MonoBehaviour
     public void GoalPassed()
     {
         isRacing = false;
-        playerControl.DisableControls();
+        playerControl.DisableMovement();
         bgm.volume = 0.2f;
-    }
-
-    private Vector3 CopyVector3(Vector3 vector)
-    {
-        return new Vector3(vector.x, vector.y, vector.z);
     }
 }

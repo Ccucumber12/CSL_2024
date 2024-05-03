@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -40,11 +41,12 @@ public class PlayerControl : MonoBehaviour
     public ParticleSystem rightDriftVFXSpark;
     public ParticleSystem boostVFX;
 
-    [Header("Input Actions")]
+    [Header("Keyboard Inputs")]
     public InputAction accelerate;
     public InputAction steer;
     public InputAction drift;
     public InputAction restart;
+    public InputAction changeInputScheme;
 
     private Rigidbody rb;
     private float currentSpeed;
@@ -59,6 +61,22 @@ public class PlayerControl : MonoBehaviour
     private bool isDriftSparking = false;
     private float remainingBoostTime;
 
+    private bool isMovementLocked;
+
+    [Header("Controller")]
+    public ControllerScheme currentControllerScheme;
+
+    [Header("Wireless Controller")]
+    public bool useWirelessController;
+    public string hostIP = "192.168.43.121";
+    public int port = 80;
+
+    private List<Joycon> joycons;
+    private Joycon joyconInput = null;
+
+    private SocketClient socketClient = null;
+    private bool driftButtonValue;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -67,12 +85,39 @@ public class PlayerControl : MonoBehaviour
     private void Start()
     {
         restart.Enable();
+        changeInputScheme.Enable();
+        accelerate.Enable();
+        steer.Enable();
+        drift.Enable();
+
+        changeInputScheme.performed += ctx => OnChangeInputScheme(ctx);
         restart.performed += ctx => RestartGame(ctx);
-        drift.started += ctx => StartDrift(ctx);
-        drift.canceled += ctx => EndDrift(ctx);
+        drift.started += ctx => StartDriftInput(ctx);
+        drift.canceled += ctx => EndDriftInput(ctx);
+
+        if (useWirelessController)
+        {
+            socketClient = new SocketClient(hostIP, port);
+            currentControllerScheme = ControllerScheme.Wireless;
+        }
+
+        joycons = JoyconManager.Instance.j;
+        if (joycons.Count > 0)
+            joyconInput = joycons[0];
 
         respawnPosition = transform.position;
         respawnRotation = transform.eulerAngles;
+
+        DisableMovement();
+    }
+
+    private void OnDestroy()
+    {
+        socketClient.Close();
+        changeInputScheme.performed -= ctx => OnChangeInputScheme(ctx);
+        restart.performed -= ctx => RestartGame(ctx);
+        drift.started -= ctx => StartDriftInput(ctx);
+        drift.canceled -= ctx => EndDriftInput(ctx);
     }
 
     private void Update()
@@ -102,6 +147,18 @@ public class PlayerControl : MonoBehaviour
                 boostVFX.Stop();
         }
 
+        if (currentControllerScheme != ControllerScheme.Keyboard)
+            PollDriftInput();
+    }
+
+    private void PollDriftInput()
+    {
+        bool value = ReadDriftValue();
+        if (driftButtonValue == false && value == true)
+            StartDrift();
+        if (driftButtonValue == true && value == false)
+            EndDrift();
+        driftButtonValue = value;
     }
 
     private void FixedUpdate()
@@ -174,7 +231,7 @@ public class PlayerControl : MonoBehaviour
         float steerValue = ReadSteerValue();
         if (isDrifting)
         {
-            float val = driftDirection * 0.7f + (steerValue + driftDirection) * 0.9f;
+            float val = driftDirection * 0.4f + (steerValue + driftDirection) * 1.2f;
             RotateVisiual(val * maxRotateAngle, wheelRotateSpeed);
         }
         else
@@ -220,17 +277,72 @@ public class PlayerControl : MonoBehaviour
 
     private float ReadAccelerateValue()
     {
-        float value = accelerate.ReadValue<float>();
-        return value;
+        if (isMovementLocked)
+            return 0;
+        switch (currentControllerScheme)
+        {
+            case ControllerScheme.Keyboard:
+                return accelerate.ReadValue<float>();
+            case ControllerScheme.Joycon:
+                if (joyconInput.GetButton(Joycon.Button.DPAD_UP) || joyconInput.GetButton(Joycon.Button.DPAD_DOWN))
+                    return 1;
+                if (joyconInput.GetButton(Joycon.Button.DPAD_LEFT) || joyconInput.GetButton(Joycon.Button.DPAD_RIGHT))
+                    return -1;
+                return 0;
+            case ControllerScheme.Wireless:
+                float value = socketClient.accelerationInput;
+                return Mathf.Abs(value) < 0.2f ? 0 : value;
+            default:
+                return 0;
+        }
     }
 
     private float ReadSteerValue()
     {
-        float value = steer.ReadValue<float>();
-        return value;
+        if (isMovementLocked)
+            return 0;
+        switch (currentControllerScheme)
+        {
+            case ControllerScheme.Keyboard:
+                return steer.ReadValue<float>();
+            case ControllerScheme.Joycon:
+                return joyconInput.GetStick()[1];
+            case ControllerScheme.Wireless:
+                float value = socketClient.rotationInput;
+                return Mathf.Abs(value) < 0.5f ? 0 : value;
+            default:
+                return 0;
+        }
     }
 
-    private void StartDrift(InputAction.CallbackContext ctx)
+    private bool ReadDriftValue()
+    {
+        if (isMovementLocked)
+            return false;
+        switch(currentControllerScheme)
+        {
+            case ControllerScheme.Keyboard:
+                return drift.IsPressed();
+            case ControllerScheme.Joycon:
+                return joyconInput.GetButton(Joycon.Button.SR);
+            case ControllerScheme.Wireless:
+                return socketClient.buttonInput;
+            default:
+                return false;
+        }
+    }
+
+    private void StartDriftInput(InputAction.CallbackContext ctx)
+    {
+        StartDrift();
+    }
+
+    private void EndDriftInput(InputAction.CallbackContext ctx)
+    {
+        EndDrift();
+    }
+
+    private void StartDrift()
     {
         if (isDrifting)
         {
@@ -247,10 +359,13 @@ public class PlayerControl : MonoBehaviour
                 leftDriftVFXGlow.Play();
             else
                 rightDriftVFXGlow.Play();
+
+            if (currentControllerScheme == ControllerScheme.Joycon)
+                joyconInput.SetRumble(100, 200, 0.5f);
         }
     }
 
-    private void EndDrift(InputAction.CallbackContext ctx)
+    private void EndDrift()
     {
         if (isDrifting == false)
             return;
@@ -260,12 +375,17 @@ public class PlayerControl : MonoBehaviour
         rightDriftVFXGlow.Stop();
         rightDriftVFXSpark.Stop();
         driftSFX.Stop();
-        
+
+        if (currentControllerScheme == ControllerScheme.Joycon)
+            joyconInput.SetRumble(0, 0, 0);
+
         if (driftCharge > driftBoostChargeTime)
         {
             remainingBoostTime = driftBoostTime;
             boostVFX.Play();
             boostSFX.Play();
+            if (currentControllerScheme == ControllerScheme.Joycon)
+                joyconInput.SetRumble(150, 300, 0.8f, Mathf.FloorToInt(driftBoostTime * 1000));
         }
 
         driftDirection = 0;
@@ -280,22 +400,33 @@ public class PlayerControl : MonoBehaviour
         respawnRotation = rotation;
     }
 
-    public void EnableControls()
+    public void EnableMovement()
     {
-        accelerate.Enable();
-        steer.Enable();
-        drift.Enable();
+        isMovementLocked = false;
     }
 
-    public void DisableControls()
+    public void DisableMovement()
     {
-        accelerate.Disable();
-        steer.Disable();
-        drift.Disable();
+        isMovementLocked = true;
     }
 
     private void RestartGame(InputAction.CallbackContext ctx)
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
+
+    private void OnChangeInputScheme(InputAction.CallbackContext ctx)
+    {
+        if (currentControllerScheme == ControllerScheme.Keyboard)
+            currentControllerScheme = ControllerScheme.Joycon;
+        else
+            currentControllerScheme = ControllerScheme.Keyboard;
+    }
+}
+
+public enum ControllerScheme
+{
+    Keyboard,
+    Joycon,
+    Wireless,
 }

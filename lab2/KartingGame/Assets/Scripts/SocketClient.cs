@@ -6,10 +6,15 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 public class SocketClient
 {
+    public float accelerationInput;
+    public float rotationInput;
+    public bool buttonInput;
+
     private Socket socketClient;
     private Thread thread;
     private byte[] data = new byte[1024];
@@ -32,8 +37,18 @@ public class SocketClient
                         }
                         int length = socketClient.Receive(data);
                         string message = Encoding.UTF8.GetString(data, 0, length);
-                        Debug.Log("Recieve message: " + message);
-                        // */
+
+                        // Receiver
+
+                        string pattern = @"\((-?\d+\.\d+),(-?\d+\.\d+),(\d+)\)";
+                        MatchCollection matches = Regex.Matches(message, pattern);
+
+                        foreach (Match match in matches)
+                        {
+                            accelerationInput = Mathf.Clamp(float.Parse(match.Groups[1].Value), -1, 1);
+                            rotationInput = Mathf.Clamp(float.Parse(match.Groups[2].Value), -1, 1);
+                            buttonInput = (int.Parse(match.Groups[3].Value) != 0);
+                        }
                     }
                 } catch (Exception ex) {
                     if (socketClient != null) {

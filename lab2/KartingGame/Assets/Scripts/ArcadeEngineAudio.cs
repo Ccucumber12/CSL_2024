@@ -64,6 +64,6 @@ public class ArcadeEngineAudio : MonoBehaviour
         }
 
         // Steering
-        Drift.volume = (Input.GetAxis("Horizontal") != 0) ? (handAngle / 30f) * DriftSoundMaxVolume : 0.0f;
+        //Drift.volume = (Input.GetAxis("Horizontal") != 0) ? (handAngle / 30f) * DriftSoundMaxVolume : 0.0f;
     }
 }

@@ -12,21 +12,8 @@ public class WirelessMotionController : MonoBehaviour
 
     private SocketClient socketClient;
 
-
     private void Awake() {
         socketClient = new SocketClient(hostIP, port);
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-       
     }
 
     void OnDestroy () {

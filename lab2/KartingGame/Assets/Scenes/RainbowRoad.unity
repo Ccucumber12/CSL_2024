@@ -3221,8 +3221,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2707990472753622027, guid: c49d6a46207f21a4a84c64926ac38d99,
         type: 3}
+      propertyPath: PlayerController
+      value: 
+      objectReference: {fileID: 828554118}
+    - target: {fileID: 2707990472753622027, guid: c49d6a46207f21a4a84c64926ac38d99,
+        type: 3}
       propertyPath: RunningSoundMaxVolume
-      value: 0.79
+      value: 0.6
       objectReference: {fileID: 0}
     - target: {fileID: 3763025869970152247, guid: c49d6a46207f21a4a84c64926ac38d99,
         type: 3}
@@ -10023,7 +10028,7 @@ PrefabInstance:
     - target: {fileID: 6889564388065093639, guid: b52d0e3f9bdd05a44bbadee7a9a1c964,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 3.85
+      value: 2.6
       objectReference: {fileID: 0}
     - target: {fileID: 6889564388065093639, guid: b52d0e3f9bdd05a44bbadee7a9a1c964,
         type: 3}
@@ -11777,6 +11782,52 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 894242396}
   m_SourcePrefab: {fileID: 100100000, guid: 5462423853bed9943a569d64dc300f0f, type: 3}
+--- !u!1 &682503383
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 682503385}
+  - component: {fileID: 682503384}
+  m_Layer: 0
+  m_Name: JoyconManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &682503384
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 682503383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 405bad29b2b998c408059182c189d9e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  EnableIMU: 1
+  EnableLocalize: 1
+--- !u!4 &682503385
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 682503383}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 106.41517, y: -0.74799013, z: 192.51003}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &688063862 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8829451551789304537, guid: 8206b722d11501a449d6a278cca2adfa,
@@ -16655,8 +16706,8 @@ Transform:
   m_GameObject: {fileID: 702852621}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 0.06, z: 0}
+  m_LocalScale: {x: 1, y: 0.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 221195298}
@@ -18429,7 +18480,7 @@ PrefabInstance:
     - target: {fileID: 6889564388065093639, guid: b52d0e3f9bdd05a44bbadee7a9a1c964,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 3.85
+      value: 2.6
       objectReference: {fileID: 0}
     - target: {fileID: 6889564388065093639, guid: b52d0e3f9bdd05a44bbadee7a9a1c964,
         type: 3}
@@ -24000,6 +24051,27 @@ MonoBehaviour:
       m_Action: Restart
       m_Flags: 0
     m_Flags: 0
+  changeInputScheme:
+    m_Name: Change Input Scheme
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: ba91a356-b579-40d5-ab6a-66ad6e08ab05
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: ea2d2279-5663-41c7-9ffc-dd440bdcc958
+      m_Path: <Keyboard>/t
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Change Input Scheme
+      m_Flags: 0
+    m_Flags: 0
+  currentControllerScheme: 1
+  useWirelessController: 0
+  hostIP: 192.168.128.1
+  port: 80
 --- !u!54 &828554121
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -25477,8 +25549,8 @@ Transform:
   m_GameObject: {fileID: 939445682}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 0.06, z: 0}
+  m_LocalScale: {x: 1, y: 0.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1617358614}
@@ -63604,7 +63676,7 @@ PrefabInstance:
     - target: {fileID: 6889564388065093639, guid: b52d0e3f9bdd05a44bbadee7a9a1c964,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 3.85
+      value: 2.6
       objectReference: {fileID: 0}
     - target: {fileID: 6889564388065093639, guid: b52d0e3f9bdd05a44bbadee7a9a1c964,
         type: 3}
@@ -64145,3 +64217,4 @@ SceneRoots:
   - {fileID: 776603528}
   - {fileID: 340121304}
   - {fileID: 772722760}
+  - {fileID: 682503385}
