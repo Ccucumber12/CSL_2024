@@ -31,8 +31,8 @@
 #define BACK 2
 
 /***** Sensor Constants *****/
-const int WHITE_THRESH[4] = { 200, 350, 350, 350 };
-const int BLACK_THRESH[4] = { 600, 800, 800, 650 };
+const int WHITE_THRESH[4] = { 150, 300, 250, 150 };
+const int BLACK_THRESH[4] = { 700, 750, 700, 750 };
 
 #define WHITE 0
 #define BLACK 1
@@ -41,7 +41,7 @@ const int BLACK_THRESH[4] = { 600, 800, 800, 650 };
 
 /***** Grid Counter *****/
 
-const int STOP_NUMBER = 20;
+const int STOP_NUMBER = 10;
 const int CONTINUOUS_THRESH = 3;
 int current_color = WHITE;
 int stop_count = 0;
@@ -51,7 +51,7 @@ const int IDLE_THRESH = 100;
 int idle_count = 0;
 int prev1, prev2, prev3, prev4;
 
-const int TICK = 10;
+const int TICK = 3;
 const int BOOST = 100;
 
 void setup() {
@@ -92,9 +92,9 @@ int value3;
 int value4;
 
 
-#define POWER 80
-#define SMALL_TURN_POWER 120
-#define BIG_TURN_POWER 240
+#define POWER 40
+#define SMALL_TURN_POWER 80
+#define BIG_TURN_POWER 80
 
 // #define POWER 50
 // #define TURN_POWER 150
@@ -104,7 +104,6 @@ void loop() {
   // loopThroughSensors();
   // delay(200);
   drive();
-  // turnLeft();
   // handleStop();
 }
 
@@ -142,13 +141,6 @@ void drive() {
   }
   handleColor();
   delay(TICK);
-  /*
-  if (previous_move != GO_STRAIGHT) {
-    goStraight();
-    handleColor();
-    delay(TICK);
-  }
-  */
 }
 
 void handleColor() {
@@ -427,8 +419,8 @@ void setDirection(int side, int dir) {
 
 void setPower(int direction, int power) {
   if (direction == LEFT) {
-    //analogWrite(PW1, min(255, power * 1.3));
-    analogWrite(PW1, power);
+    analogWrite(PW1, min(255, power * 1.3));
+    // analogWrite(PW1, power);
   } else if (direction == RIGHT) {
     analogWrite(PW2, power);
   } else {
@@ -497,4 +489,25 @@ void loopThroughSensors() {
   Serial.print(" ");
   Serial.print(analogRead(SENSOR4));
   Serial.println();
+}
+
+void testTurn() {
+  setDirection(LEFT, FRONT);
+  setPower(LEFT, 255);
+  setDirection(RIGHT, FRONT);
+  setPower(RIGHT, 255);
+  delay(BOOST);
+  goStraight();
+  delay(500);
+  turnLeftSmall();
+  delay(500);
+  setDirection(LEFT, FRONT);
+  setPower(LEFT, 255);
+  setDirection(RIGHT, FRONT);
+  setPower(RIGHT, 255);
+  delay(BOOST);
+  goStraight();
+  delay(500);
+  turnRightSmall();
+  delay(500);
 }
