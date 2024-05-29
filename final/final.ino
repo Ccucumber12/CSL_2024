@@ -31,8 +31,8 @@
 #define BACK 2
 
 /***** Sensor Constants *****/
-const int WHITE_THRESH[4] = { 350, 300, 300, 300 };
-const int BLACK_THRESH[4] = { 770, 700, 700, 800 };
+const int WHITE_THRESH[4] = { 200, 350, 350, 350 };
+const int BLACK_THRESH[4] = { 600, 800, 800, 650 };
 
 #define WHITE 0
 #define BLACK 1
@@ -47,6 +47,12 @@ int current_color = WHITE;
 int stop_count = 0;
 int change_count = 0;
 
+const int IDLE_THRESH = 100;
+int idle_count = 0;
+int prev1, prev2, prev3, prev4;
+
+const int TICK = 10;
+const int BOOST = 100;
 
 void setup() {
   // IR Sensors
@@ -87,14 +93,18 @@ int value4;
 
 
 #define POWER 80
-#define TURN_POWER 200
+#define SMALL_TURN_POWER 120
+#define BIG_TURN_POWER 240
+
+// #define POWER 50
+// #define TURN_POWER 150
 
 void loop() {
   // readAllSensors();
-  // readSensor(SENSOR4, LED4W, LED4B);
+  // loopThroughSensors();
   // delay(200);
-  // drive();
-  turnLeft();
+  drive();
+  // turnLeft();
   // handleStop();
 }
 
@@ -106,30 +116,39 @@ void loop() {
 int previous_move = GO_STRAIGHT;
 
 void drive() {
+  recordPrev();
   readAllSensors();
 
-  if (value1 != GRAY) {
-    turnLeft();
-  } else if (value4 != GRAY) {
-    turnRight();
+  handleIdle();
+  if (prev1 != GRAY && value1 != GRAY) {
+    turnLeftBig();
+  } else if (prev4 != GRAY && value4 != GRAY) {
+    turnRightBig();
   } else {
     if (value2 == GRAY && value3 == GRAY) {
       if (previous_move == GO_STRAIGHT)
         goStraight();
       else if (previous_move == TURN_LEFT)
-        turnLeft();
+        turnLeftBig();
       else if (previous_move == TURN_RIGHT)
-        turnRight();
+        turnRightBig();
     } else if (value3 == GRAY) {
-      turnLeft();
+      turnLeftSmall();
     } else if (value2 == GRAY) {
-      turnRight();
+      turnRightSmall();
     } else {
       goStraight();
     }
   }
-  // handleColor();
-  delay(10);
+  handleColor();
+  delay(TICK);
+  /*
+  if (previous_move != GO_STRAIGHT) {
+    goStraight();
+    handleColor();
+    delay(TICK);
+  }
+  */
 }
 
 void handleColor() {
@@ -151,7 +170,7 @@ void handleColor() {
       setPower(LEFT, 255);
       setDirection(RIGHT, FRONT);
       setPower(RIGHT, 255);
-      delay(150);
+      delay(BOOST);
     }
   }
 }
@@ -198,6 +217,22 @@ void handleStop() {
   }
 }
 
+void handleIdle() {
+  if (prev1 == value1 && prev2 == value2 && prev3 == value3 && prev4 == value4) {
+    idle_count += 1;
+  } else {
+    idle_count = 0;
+  }
+  if (idle_count == IDLE_THRESH) {
+    idle_count = 0;
+    setDirection(LEFT, FRONT);
+    setPower(LEFT, 255);
+    setDirection(RIGHT, FRONT);
+    setPower(RIGHT, 255);
+    delay(BOOST);
+  }
+}
+
 void setLight(int index, int value) {
   if (index == 1)
     digitalWrite(LED4B, value);
@@ -215,6 +250,13 @@ void setLight(int index, int value) {
     digitalWrite(LED2W, value);
   if (index == 8)
     digitalWrite(LED1W, value);
+}
+
+void recordPrev() {
+  prev1 = value1;
+  prev2 = value2;
+  prev3 = value3;
+  prev4 = value4;
 }
 
 int getColor() {
@@ -244,19 +286,35 @@ void goStraight() {
   previous_move = GO_STRAIGHT;
 }
 
-void turnLeft() {
+void turnLeftSmall() {
   setDirection(LEFT, BACK);
-  setPower(LEFT, TURN_POWER);
+  setPower(LEFT, SMALL_TURN_POWER);
   setDirection(RIGHT, FRONT);
-  setPower(RIGHT, TURN_POWER);
+  setPower(RIGHT, SMALL_TURN_POWER);
   previous_move = TURN_LEFT;
 }
 
-void turnRight() {
+void turnRightSmall() {
   setDirection(LEFT, FRONT);
-  setPower(LEFT, TURN_POWER);
+  setPower(LEFT, SMALL_TURN_POWER);
   setDirection(RIGHT, BACK);
-  setPower(RIGHT, TURN_POWER);
+  setPower(RIGHT, SMALL_TURN_POWER);
+  previous_move = TURN_RIGHT;
+}
+
+void turnLeftBig() {
+  setDirection(LEFT, BACK);
+  setPower(LEFT, BIG_TURN_POWER);
+  setDirection(RIGHT, FRONT);
+  setPower(RIGHT, BIG_TURN_POWER);
+  previous_move = TURN_LEFT;
+}
+
+void turnRightBig() {
+  setDirection(LEFT, FRONT);
+  setPower(LEFT, BIG_TURN_POWER);
+  setDirection(RIGHT, BACK);
+  setPower(RIGHT, BIG_TURN_POWER);
   previous_move = TURN_RIGHT;
 }
 
@@ -369,7 +427,8 @@ void setDirection(int side, int dir) {
 
 void setPower(int direction, int power) {
   if (direction == LEFT) {
-    analogWrite(PW1, min(255, power * 1.3));
+    //analogWrite(PW1, min(255, power * 1.3));
+    analogWrite(PW1, power);
   } else if (direction == RIGHT) {
     analogWrite(PW2, power);
   } else {
@@ -401,7 +460,6 @@ void loopThroughLeds2() {
   delay(1000);
 }
 
-
 void loopThroughLeds() {
   digitalWrite(LED1W, HIGH);
   delay(1000);
@@ -428,4 +486,15 @@ void loopThroughLeds() {
   delay(1000);
   digitalWrite(LED4B, LOW);
   delay(1000);
+}
+
+void loopThroughSensors() {
+  Serial.print(analogRead(SENSOR1));
+  Serial.print(" ");
+  Serial.print(analogRead(SENSOR2));
+  Serial.print(" ");
+  Serial.print(analogRead(SENSOR3));
+  Serial.print(" ");
+  Serial.print(analogRead(SENSOR4));
+  Serial.println();
 }
