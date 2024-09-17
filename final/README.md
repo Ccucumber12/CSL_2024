@@ -1,2 +1,2 @@
-# CSL Final Project - Line Follower Vehicle Report
+# CSL Final Project - Line Follower Vehicle
 
